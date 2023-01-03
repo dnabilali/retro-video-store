@@ -6,5 +6,5 @@ class Customer(db.Model):
     postal_code = db.Column(db.String, nullable=False)
     phone_number = db.Column(db.String, nullable=False)
     register_at = db.Column(db.DateTime, nullable=False)
-    videos_checked_out_count = db.Column(db.Integer, nullable=False)
+    videos_checked_out_count = db.Column(db.Integer, nullable=False, default = 0)
 
