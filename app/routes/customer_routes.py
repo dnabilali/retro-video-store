@@ -18,7 +18,7 @@ def get_all_customers():
             "name": customer.name,
             "postal_code": customer.postal_code,
             "phone": customer.phone,
-            "registerd_at": customer.registerd_at,
+            "registered_at": customer.registered_at,
             "videos_checked_out_count": customer.videos_checked_out_count
         })
 
@@ -47,7 +47,7 @@ def get_one_customer(customer_id):
             "name": customer.name,
             "postal_code": customer.postal_code,
             "phone": customer.phone,
-            "registerd_at": customer.registerd_at,
+            "registered_at": customer.registered_at,
             "videos_checked_out_count": customer.videos_checked_out_count
     }
 
@@ -98,6 +98,6 @@ def update_one_customer(customer_id):
     customer.postal_code = request_body["postal_code"]
     db.session.commit()
     response_body = request_body
-    response_body['registerd_at'] = customer.registerd_at
+    response_body['registered_at'] = customer.registered_at
 
     return make_response(jsonify(response_body), 200)
