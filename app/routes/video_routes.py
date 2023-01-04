@@ -18,7 +18,7 @@ def validate_video_id(video_id):
         id = int(video_id)
     except:
         msg = f"Video id: {video_id} is Invalid"
-        abort(make_response(jsonify({"details": msg}),400))
+        abort(make_response(jsonify({"message": msg}),400))
 
     video = Video.query.get(id)
 
@@ -40,16 +40,28 @@ def create_video():
         msg = "An empty or invalid json object was sent. Can't create video"
         abort(make_response(jsonify({"message":msg}),400))
 
-    try:
-        new_video = Video(
-            title = request_body["title"],
-            total_inventory = request_body["total_inventory"],
-            release_date = request_body["release_date"]
-        )
+   
+    req_title = request_body.get("title")
+    req_total_inventory = request_body.get("total_inventory")
+    req_release_date = request_body.get("release_date") 
 
-    except:
-        msg = "Invalid json object sent from the request. Can't create video"
-        abort(make_response(jsonify({"message":msg}),400))
+    if not req_title:
+        msg = "Request body must include title. Can't create video"
+        abort(make_response(jsonify({"details":msg}),400))
+
+    if not req_total_inventory:
+        msg = "Request body must include total_inventory. Can't create video"
+        abort(make_response(jsonify({"details":msg}),400))
+
+    if not req_release_date:
+        msg = "Request body must include release_date. Can't create video"
+        abort(make_response(jsonify({"details":msg}),400))
+
+    new_video = Video(
+            title = req_title,
+            total_inventory = req_total_inventory,
+            release_date = req_release_date
+    )
 
     try:
         db.session.add(new_video)
