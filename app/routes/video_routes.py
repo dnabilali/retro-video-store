@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, abort, make_response,request
 from app.models.video import Video
+from app import db
 
 videos_bp = Blueprint("videos_bp",__name__, url_prefix="/videos")
 
@@ -30,4 +31,33 @@ def validate_video_id(video_id):
 @videos_bp.route("/<video_id>",methods=["GET"])
 def get_video(video_id):
     video = validate_video_id(video_id)
-    return jsonify(video.to_dict())    
+    return jsonify(video.to_dict())  
+
+@videos_bp.route("",methods=["POST"])
+def create_video():
+    request_body = request.get_json(silent=True)
+    if not request_body:
+        msg = "An empty or invalid json object was sent. Can't create video"
+        abort(make_response(jsonify({"message":msg}),400))
+
+    try:
+        new_video = Video(
+            title = request_body["title"],
+            total_inventory = request_body["total_inventory"],
+            release_date = request_body["release_date"]
+        )
+
+    except:
+        msg = "Invalid json object sent from the request. Can't create video"
+        abort(make_response(jsonify({"message":msg}),400))
+
+    try:
+        db.session.add(new_video)
+        db.session.commit()
+
+    except:
+        msg = "Error creating video in db"
+        abort(make_response(jsonify({"message":msg}),500))
+
+    msg = f"Video {new_video.title} successfully created" 
+    return make_response(jsonify(msg),201)
