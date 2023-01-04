@@ -4,7 +4,7 @@ class Video(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     title = db.Column(db.String, nullable=False)
     total_inventory = db.Column(db.Integer, nullable=False)
-    release_date = db.Column(db.DateTime)
+    release_date = db.Column(db.DateTime, nullable=False)
 
     def to_dict(self):
         return {
