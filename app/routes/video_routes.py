@@ -31,7 +31,7 @@ def validate_video_id(video_id):
 def validate_request_body(request_body):
     if not request_body:
         msg = "An empty or invalid json object was sent."
-        abort(make_response(jsonify({"message":msg}),400))
+        abort(make_response(jsonify({"details":msg}),400))
 
     req_title = request_body.get("title")
     req_total_inventory = request_body.get("total_inventory")
