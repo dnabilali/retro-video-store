@@ -60,4 +60,4 @@ def create_video():
         abort(make_response(jsonify({"message":msg}),500))
 
     msg = f"Video {new_video.title} successfully created" 
-    return make_response(jsonify(msg),201)
+    return make_response(jsonify({"id": new_video.id, "msg": msg}),201)
