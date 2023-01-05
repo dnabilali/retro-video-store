@@ -40,3 +40,6 @@ def checkout_video_to_customer():
     }
 
     return make_response(jsonify(response_body), 200)
+
+# @rentals_bp.route("check-in", methods=["POST"])
+# def check_in_video():
