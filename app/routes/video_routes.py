@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, abort, make_response,request
 from app.models.video import Video
 from app import db
+from app.models.rental import Rental
+
 
 videos_bp = Blueprint("videos_bp",__name__, url_prefix="/videos")
 
@@ -100,3 +102,20 @@ def delete_video(video_id):
     db.session.commit()
 
     return make_response(jsonify({"id":video.id}),200)
+
+@videos_bp.route("<video_id>/rentals", methods=["GET"])
+def list_customers_renting_video(video_id):
+    valid_video = validate_video_id(video_id)
+    all_customers_with_video = valid_video.customers
+    response = []
+
+    for customer in all_customers_with_video:
+        rental = Rental.query.filter_by(customer_id=customer.id, video_id=video_id).first()
+        response.append({
+            "due_date": rental.due_date,
+            "name": customer.name,
+            "phone": customer.phone,
+            "postal_code": customer.postal_code,
+        })
+
+    return make_response(jsonify(response), 200)
