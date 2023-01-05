@@ -8,3 +8,4 @@ class Customer(db.Model):
     phone = db.Column(db.String, nullable=False)
     registered_at = db.Column(db.DateTime, default=datetime.datetime.now().strftime("%a, %d %b %Y %X %z"))
     videos_checked_out_count = db.Column(db.Integer, nullable=False, default=0)
+    videos = db.relationship("Video", secondary="rental", backref="customers")
