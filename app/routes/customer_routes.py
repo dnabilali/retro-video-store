@@ -25,23 +25,23 @@ def get_all_customers():
     return make_response(jsonify(customers_response), 200)
 
 
-def validate_id(customer_id):
+def validate_model(model, id):
     try:
-        int(customer_id)
+        int(id)
     except:
-        abort(make_response({"message": f"{customer_id} is an invalid customer id"}, 400))
+        abort(make_response({"message": f"{id} is an invalid {model.__name__} id"}, 400))
 
-    customer = Customer.query.get(customer_id)
+    model_instance = model.query.get(id)
 
-    if not customer:
-        abort(make_response({"message": f"Customer {customer_id} was not found"}, 404))
+    if not model_instance:
+        abort(make_response({"message": f"{model.__name__} {id} was not found"}, 404))
     
-    return customer
+    return model_instance
 
 
 @customers_bp.route("/<customer_id>", methods=["GET"])
 def get_one_customer(customer_id):
-    customer = validate_id(customer_id)
+    customer = validate_model(Customer, customer_id)
     customer_data = {
             "id": customer.id,
             "name": customer.name,
@@ -76,7 +76,7 @@ def add_one_customer():
 
 @customers_bp.route("/<customer_id>", methods=["DELETE"])
 def delete_one_customer(customer_id):
-    customer = validate_id(customer_id)
+    customer = validate_model(Customer, customer_id)
     db.session.delete(customer)
     db.session.commit()
     
@@ -85,7 +85,7 @@ def delete_one_customer(customer_id):
 
 @customers_bp.route("/<customer_id>", methods=["PUT"])
 def update_one_customer(customer_id):
-    customer = validate_id(customer_id)
+    customer = validate_model(Customer, customer_id)
     request_body = request.get_json()
     required_attributes = ["name", "phone", "postal_code"]
 
