@@ -84,3 +84,11 @@ def update_one_customer(customer_id):
     response_body['registered_at'] = customer.registered_at
 
     return make_response(jsonify(response_body), 200)
+
+@customers_bp.route("/<customer_id>/rentals", methods=["GET"])
+def get_customer_checked_out_videos(customer_id):
+    customer = validate_model(Customer, customer_id)
+
+    response_body = [video.to_dict() for video in customer.videos]
+
+    return make_response(jsonify(response_body),200)
