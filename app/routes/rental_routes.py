@@ -4,6 +4,7 @@ from app.models.customer import Customer
 from app.models.video import Video
 from app.models.rental import Rental
 from app import db
+from datetime import datetime, timedelta
 
 
 rentals_bp = Blueprint("rentals_bp", __name__, url_prefix="/rentals")
@@ -21,7 +22,13 @@ def checkout_video_to_customer():
     if valid_video.total_inventory < 1:
         abort(make_response(jsonify({"message":"Could not perform checkout"}), 400))
 
-    new_rental = Rental(customer_id=valid_customer.id, video_id=valid_video.id)
+    if valid_video in valid_customer.videos:
+        abort(make_response(jsonify({"message":"This customer already has this video checked out"}), 400))
+
+    new_rental = Rental(
+            customer_id=valid_customer.id, 
+            video_id=valid_video.id,
+            due_date=datetime.now() + timedelta(days=7))
     valid_video.total_inventory -= 1
     valid_customer.videos_checked_out_count += 1
     db.session.add(new_rental)
