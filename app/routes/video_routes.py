@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify, abort, make_response,request
 from app.models.video import Video
 from app import db
-from app.routes.customer_routes import validate_model
+from app.routes.helpers import validate_model, validate_request_body
 
 videos_bp = Blueprint("videos_bp",__name__, url_prefix="/videos")
+
+required_data = ["title","total_inventory","release_date"]
 
 @videos_bp.route("",methods=["GET"])
 def get_all_videos():
@@ -14,29 +16,6 @@ def get_all_videos():
 
     return jsonify(videos_response)
 
-def validate_request_body(request_body):
-    if not request_body:
-        msg = "An empty or invalid json object was sent."
-        abort(make_response(jsonify({"details":msg}),400))
-
-    req_title = request_body.get("title")
-    req_total_inventory = request_body.get("total_inventory")
-    req_release_date = request_body.get("release_date") 
-
-    if not req_title:
-        msg = "Request body must include title."
-        abort(make_response(jsonify({"details":msg}),400))
-
-    if not req_total_inventory or type(req_total_inventory) is not int:
-        msg = "Request body must include total_inventory."
-        abort(make_response(jsonify({"details":msg}),400))
-
-    if not req_release_date:
-        msg = "Request body must include release_date."
-        abort(make_response(jsonify({"details":msg}),400))
-
-    return req_title,req_total_inventory,req_release_date
-
 @videos_bp.route("/<video_id>",methods=["GET"])
 def get_video(video_id):
     video = validate_model(Video,video_id)
@@ -45,12 +24,12 @@ def get_video(video_id):
 @videos_bp.route("",methods=["POST"])
 def create_video():
     request_body = request.get_json(silent=True)
-    request_data = validate_request_body(request_body)
+    validate_request_body(request_body,required_data)
 
     new_video = Video(
-            title = request_data[0],
-            total_inventory = request_data[1],
-            release_date = request_data[2]
+            title = request_body["title"],
+            total_inventory = request_body["total_inventory"],
+            release_date = request_body["release_date"]
     )
 
     try:
@@ -68,11 +47,11 @@ def update_video(video_id):
     video = validate_model(Video,video_id)
 
     request_body = request.get_json(silent=True)
-    request_data = validate_request_body(request_body)
+    validate_request_body(request_body,required_data)
 
-    video.title = request_data[0]
-    video.total_inventory = request_data[1]
-    video.release_date = request_data[2]
+    video.title = request_body["title"]
+    video.total_inventory = request_body["total_inventory"]
+    video.release_date = request_body["release_date"]
 
     db.session.commit()
 

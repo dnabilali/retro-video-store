@@ -1,5 +1,6 @@
 from app import db
 from app.models.customer import Customer
+from app.routes.helpers import validate_model, validate_request_body
 from flask import Blueprint, jsonify, request, make_response, abort
 import datetime
 
@@ -25,20 +26,6 @@ def get_all_customers():
     return make_response(jsonify(customers_response), 200)
 
 
-def validate_model(model, id):
-    try:
-        int(id)
-    except:
-        abort(make_response({"message": f"{id} is an invalid {model.__name__} id"}, 400))
-
-    model_instance = model.query.get(id)
-
-    if not model_instance:
-        abort(make_response({"message": f"{model.__name__} {id} was not found"}, 404))
-    
-    return model_instance
-
-
 @customers_bp.route("/<customer_id>", methods=["GET"])
 def get_one_customer(customer_id):
     customer = validate_model(Customer, customer_id)
@@ -59,10 +46,8 @@ def add_one_customer():
     request_body = request.get_json()
     required_attributes = ["name", "postal_code", "phone"]
 
-    for attr in required_attributes:
-        if attr not in request_body:
-            abort(make_response(jsonify({"details": f"Request body must include {attr}."}), 400))
-
+    validate_request_body(request_body, required_attributes)
+    
     new_customer = Customer(name=request_body["name"], 
             postal_code=request_body["postal_code"],
             phone=request_body["phone"])
@@ -89,10 +74,8 @@ def update_one_customer(customer_id):
     request_body = request.get_json()
     required_attributes = ["name", "phone", "postal_code"]
 
-    for attr in required_attributes:
-        if attr not in request_body or type(request_body[attr]) is not str:
-            abort(make_response(jsonify({"message":f"{attr} is necessary to update a customer"}), 400))
-
+    validate_request_body(request_body, required_attributes)
+    
     customer.name = request_body["name"]
     customer.phone = request_body["phone"]
     customer.postal_code = request_body["postal_code"]
