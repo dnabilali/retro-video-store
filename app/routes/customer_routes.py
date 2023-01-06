@@ -17,12 +17,19 @@ def get_all_customers():
     sort_values = ["name","registered_at","postal_code"]
 
     sort_query_value = ""
-    for data in sort_values:
-        if data in sort_values: 
-            sort_query_value = data
-            break 
+    if sort_query in sort_values:
+        sort_query_value = sort_query
+    else:
+        #invalid parameter for sort query parameter or None
+        sort_query = sort_query.order_by(Customer.id)
 
     if sort_query_value:
+        if sort_query_value == "name":
+            sort_query = sort_query.order_by(Customer.name)
+        elif sort_query_value == "registered_at":
+            sort_query = sort_query.order_by(Customer.registered_at)
+        elif sort_query_value == "postal_code":
+            sort_query = sort_query.order_by(Customer.postal_code)
         
 
 
