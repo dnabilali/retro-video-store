@@ -37,33 +37,3 @@ def checkout_video_to_customer():
 
     return make_response(jsonify(response_body), 200)
 
-@rentals_bp.route("check-in", methods=["POST"])
-def check_in_video():
-    request_body = request.get_json(silent=True)
-    required_data = ["customer_id", "video_id"]
-
-    validate_request_body(request_body,required_data)
-
-    customer = validate_model(Customer,request_body["customer_id"])
-    video = validate_model(Video,request_body["video_id"])
-
-    rental = Rental.query.filter_by(video_id=video.id, customer_id=customer.id)
-
-    if not rental:
-        msg = f"No outstanding rentals for customer {customer.id} and video {video.id}"
-        abort(make_response(jsonify({"message":msg}),400))
-
-    video.total_inventory += 1
-    customer.videos_checked_out_count -= 1
-    
-    db.session.delete(rental)
-    db.session.commit()
-
-    response_data = {}
-    response_data["video_id"] = video.id
-    response_data["customer_id"] = customer.id
-    response_data["videos_checked_out_count"] = customer.videos_chequed_out_count
-    response_data["available_inventory"] = video.total_inventory
-
-    return make_response(jsonify(response_data),200)
-
