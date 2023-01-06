@@ -10,7 +10,23 @@ customers_bp = Blueprint("customers_bp", __name__, url_prefix="/customers")
 
 @customers_bp.route("", methods=["GET"])
 def get_all_customers():
-    customers = Customer.query.all()
+    customer_query = Customer.query
+
+
+    sort_query = request.args.get("sort")
+    sort_values = ["name","registered_at","postal_code"]
+
+    sort_query_value = ""
+    for data in sort_values:
+        if data in sort_values: 
+            sort_query_value = data
+            break 
+
+    if sort_query_value:
+        
+
+
+    customers = customer_query.all()
     customers_response = []
 
     for customer in customers:
