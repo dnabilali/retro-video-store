@@ -12,25 +12,19 @@ customers_bp = Blueprint("customers_bp", __name__, url_prefix="/customers")
 def get_all_customers():
     customer_query = Customer.query
 
-
     sort_query = request.args.get("sort")
-    sort_values = ["name","registered_at","postal_code"]
 
-    sort_query_value = ""
-    if sort_query in sort_values:
-        sort_query_value = sort_query
+    if sort_query:
+        if sort_query == "name":
+            customer_query = customer_query.order_by(Customer.name)
+        elif sort_query == "registered_at":
+            customer_query = customer_query.order_by(Customer.registered_at)
+        elif sort_query == "postal_code":
+            customer_query = customer_query.order_by(Customer.postal_code)
+        else:
+            customer_query = customer_query.order_by(Customer.id)
     else:
-        #invalid parameter for sort query parameter or None
-        sort_query = sort_query.order_by(Customer.id)
-
-    if sort_query_value:
-        if sort_query_value == "name":
-            sort_query = sort_query.order_by(Customer.name)
-        elif sort_query_value == "registered_at":
-            sort_query = sort_query.order_by(Customer.registered_at)
-        elif sort_query_value == "postal_code":
-            sort_query = sort_query.order_by(Customer.postal_code)
-        
+        customer_query = customer_query.order_by(Customer.id)   
 
 
     customers = customer_query.all()
