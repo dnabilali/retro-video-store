@@ -142,19 +142,22 @@ def get_customer_checked_out_videos(customer_id):
         if query_param in request.args:
             possible_query_params[query_param] = request.args.get(query_param)
 
-    join_query = db.session.query(Rental, Video).join(Video, Rental.video_id==Video.id).filter(Rental.customer_id == customer_id)
+    join_query = db.session.query(Rental, Video)\
+            .join(Video, Rental.video_id==Video.id)\
+            .filter(Rental.customer_id == customer_id)
 
     sort_params = ["title", "release_date"]
-    if possible_query_params["sort"]:
-        for param in sort_params:
-            if possible_query_params["sort"] == param:
-                join_query = join_query.order_by(param)
+    for param in sort_params:
+        if possible_query_params["sort"] == param:
+            join_query = join_query.order_by(param)
 
-
-    if possible_query_params["count"] and possible_query_params["count"].isdigit():
+    if possible_query_params["count"] and \
+            possible_query_params["count"].isdigit():
         possible_query_params["count"] = int(possible_query_params["count"])
-        if possible_query_params["page_num"] and possible_query_params["page_num"].isdigit():
-            possible_query_params["page_num"] = int(possible_query_params["page_num"])
+        if possible_query_params["page_num"] and \
+                possible_query_params["page_num"].isdigit():
+            possible_query_params["page_num"] = \
+                    int(possible_query_params["page_num"])
         else:
             possible_query_params["page_num"] = 1
         join_query = join_query.paginate(
