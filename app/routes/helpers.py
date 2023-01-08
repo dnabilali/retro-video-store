@@ -22,3 +22,4 @@ def validate_request_body(request_body,required_data):
         if data not in request_body: 
             msg = f"Request body must include {data}. Request failed"
             abort(make_response(jsonify({"details":msg}),400))
+

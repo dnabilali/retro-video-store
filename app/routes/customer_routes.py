@@ -10,7 +10,49 @@ customers_bp = Blueprint("customers_bp", __name__, url_prefix="/customers")
 
 @customers_bp.route("", methods=["GET"])
 def get_all_customers():
-    customers = Customer.query.all()
+    customer_query = Customer.query
+
+    sort_param = request.args.get("sort")
+
+    if sort_param:
+        if sort_param == "name":
+            customer_query = customer_query.order_by(Customer.name)
+        elif sort_param == "registered_at":
+            customer_query = customer_query.order_by(Customer.registered_at)
+        elif sort_param == "postal_code":
+            customer_query = customer_query.order_by(Customer.postal_code)
+        else:
+            customer_query = customer_query.order_by(Customer.id)
+    else:
+        customer_query = customer_query.order_by(Customer.id)   
+
+    count_param = request.args.get("count")
+    page_num_param = request.args.get("page_num")
+
+    pagination = False
+    count = None
+    page_num = None
+    if count_param and count_param.isdigit():
+        count = int(count_param)
+        pagination = True
+
+    if page_num_param and page_num_param.isdigit():
+        page_num = int(page_num_param)
+        pagination = True
+
+    customers = []
+    if pagination:
+        page = customer_query.paginate(per_page=count)
+        if page_num is None:
+            page_num = 1
+        while(page_num > 1):
+            page = page.next()
+            page_num -= 1
+
+        customers = page.items
+    else:
+        customers = customer_query.all()
+    
     customers_response = []
 
     for customer in customers:
