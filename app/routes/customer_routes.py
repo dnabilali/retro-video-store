@@ -1,5 +1,7 @@
 from app import db
 from app.models.customer import Customer
+from app.models.rental import Rental
+from app.models.video import Video
 from app.routes.helpers import validate_model, validate_request_body
 from flask import Blueprint, jsonify, request, make_response, abort
 import datetime
@@ -127,10 +129,47 @@ def update_one_customer(customer_id):
 
     return make_response(jsonify(response_body), 200)
 
+
 @customers_bp.route("/<customer_id>/rentals", methods=["GET"])
 def get_customer_checked_out_videos(customer_id):
     customer = validate_model(Customer, customer_id)
 
-    response_body = [video.to_dict() for video in customer.videos]
+    possible_query_params = {"sort" : "", 
+            "count": 0, 
+            "page_num": 0}
+
+    for query_param in possible_query_params:
+        if query_param in request.args:
+            possible_query_params[query_param] = request.args.get(query_param)
+
+    join_query = db.session.query(Rental, Video).join(Video, Rental.video_id==Video.id).filter(Rental.customer_id == customer_id)
+
+    sort_params = ["title", "release_date"]
+    if possible_query_params["sort"]:
+        for param in sort_params:
+            if possible_query_params["sort"] == param:
+                join_query = join_query.order_by(param)
+
+
+    if possible_query_params["count"] and possible_query_params["count"].isdigit():
+        possible_query_params["count"] = int(possible_query_params["count"])
+        if possible_query_params["page_num"] and possible_query_params["page_num"].isdigit():
+            possible_query_params["page_num"] = int(possible_query_params["page_num"])
+        else:
+            possible_query_params["page_num"] = 1
+        join_query = join_query.paginate(
+                page=possible_query_params["page_num"], 
+                per_page=possible_query_params["count"]).items
+    else:
+        join_query = join_query.all()
+
+    response_body = []
+    for row in join_query:
+        response_body.append({
+            "id": row.Video.id,
+            "title": row.Video.title,
+            "total_inventory": row.Video.total_inventory,
+            "release_date": row.Video.release_date
+        })
 
     return make_response(jsonify(response_body),200)

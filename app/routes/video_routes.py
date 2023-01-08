@@ -30,6 +30,7 @@ def create_video():
     new_video = Video(
             title = request_body["title"],
             total_inventory = request_body["total_inventory"],
+            # available_inventory = request_body["total_inventory"],
             release_date = request_body["release_date"]
     )
 
