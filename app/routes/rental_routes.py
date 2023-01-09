@@ -6,6 +6,7 @@ from app.models.rental import Rental
 from app import db
 from datetime import datetime, timedelta
 
+MAX_DAYS_RENTALS = 7
 
 rentals_bp = Blueprint("rentals_bp", __name__, url_prefix="/rentals")
 
@@ -28,7 +29,7 @@ def checkout_video_to_customer():
     new_rental = Rental(
             customer_id=valid_customer.id, 
             video_id=valid_video.id,
-            due_date=datetime.now() + timedelta(days=7))
+            due_date=datetime.now() + timedelta(days=MAX_DAYS_RENTALS))
     valid_video.available_inventory -= 1
     valid_customer.videos_checked_out_count += 1
     db.session.add(new_rental)
@@ -44,7 +45,7 @@ def checkout_video_to_customer():
 
     return make_response(jsonify(response_body), 200)
 
-@rentals_bp.route("check-in", methods=["POST"])
+@rentals_bp.route("/check-in", methods=["POST"])
 def check_in_video():
     request_body = request.get_json(silent=True)
     required_data = ["customer_id", "video_id"]
@@ -72,4 +73,3 @@ def check_in_video():
     response_data["available_inventory"] = video.available_inventory
 
     return make_response(jsonify(response_data),200)
-
