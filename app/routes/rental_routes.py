@@ -19,7 +19,7 @@ def checkout_video_to_customer():
     valid_customer = validate_model(Customer, request_body["customer_id"])
     valid_video = validate_model(Video, request_body["video_id"])
 
-    if valid_video.total_inventory < 1:
+    if valid_video.available_inventory < 1:
         abort(make_response(jsonify({"message":"Could not perform checkout"}), 400))
 
     if valid_video in valid_customer.videos:
@@ -29,7 +29,7 @@ def checkout_video_to_customer():
             customer_id=valid_customer.id, 
             video_id=valid_video.id,
             due_date=datetime.now() + timedelta(days=7))
-    valid_video.total_inventory -= 1
+    valid_video.available_inventory -= 1
     valid_customer.videos_checked_out_count += 1
     db.session.add(new_rental)
     db.session.commit()
@@ -39,7 +39,7 @@ def checkout_video_to_customer():
         "video_id" : valid_video.id,
         "due_date" : new_rental.due_date,
         "videos_checked_out_count" : valid_customer.videos_checked_out_count,
-        "available_inventory" : valid_video.total_inventory
+        "available_inventory" : valid_video.available_inventory
     }
 
     return make_response(jsonify(response_body), 200)
@@ -59,7 +59,7 @@ def check_in_video():
         msg = f"No outstanding rentals for customer {customer.id} and video {video.id}"
         abort(make_response(jsonify({"message":msg}),400))
 
-    video.total_inventory += 1
+    video.available_inventory += 1
     customer.videos_checked_out_count -= 1
     
     db.session.delete(rental)
@@ -69,7 +69,7 @@ def check_in_video():
     response_data["video_id"] = video.id
     response_data["customer_id"] = customer.id
     response_data["videos_checked_out_count"] = customer.videos_checked_out_count
-    response_data["available_inventory"] = video.total_inventory
+    response_data["available_inventory"] = video.available_inventory
 
     return make_response(jsonify(response_data),200)
 

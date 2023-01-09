@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, abort, make_response,request
 from app.models.video import Video
 from app.models.rental import Rental
+from app.models.customer import Customer
 from app import db
 from app.routes.helpers import validate_model, validate_request_body
 
@@ -70,16 +71,46 @@ def delete_video(video_id):
 @videos_bp.route("<video_id>/rentals", methods=["GET"])
 def list_customers_renting_video(video_id):
     valid_video = validate_model(Video,video_id)
-    all_customers_with_video = valid_video.customers
-    response = []
 
-    for customer in all_customers_with_video:
-        rental = Rental.query.filter_by(customer_id=customer.id, video_id=video_id).first()
+    possible_query_params = {"sort" : "", 
+            "count": 0, 
+            "page_num": 0}
+
+    for query_param in possible_query_params:
+        if query_param in request.args:
+            possible_query_params[query_param] = request.args.get(query_param)
+
+    join_query = db.session.query(Rental, Customer)\
+            .join(Customer, Rental.customer_id==Customer.id)\
+            .filter(Rental.video_id == video_id)
+
+    sort_params = ["name", "registered_at", "postal_code"]
+    for param in sort_params:
+        if possible_query_params["sort"] == param:
+            join_query = join_query.order_by(param)
+
+    if possible_query_params["count"] and \
+            possible_query_params["count"].isdigit():
+        possible_query_params["count"] = int(possible_query_params["count"])
+        if possible_query_params["page_num"] and \
+                possible_query_params["page_num"].isdigit():
+            possible_query_params["page_num"] = \
+                    int(possible_query_params["page_num"])
+        else:
+            possible_query_params["page_num"] = 1
+        join_query = join_query.paginate(
+                page=possible_query_params["page_num"], 
+                per_page=possible_query_params["count"]).items
+    else:
+        join_query = join_query.all()
+
+    response = []
+    for row in join_query:
         response.append({
-            "due_date": rental.due_date,
-            "name": customer.name,
-            "phone": customer.phone,
-            "postal_code": customer.postal_code,
+            "name": row.Customer.name,
+            "id": row.Customer.id,
+            "phone": row.Customer.phone,
+            "postal_code": row.Customer.postal_code,
         })
 
     return make_response(jsonify(response), 200)
