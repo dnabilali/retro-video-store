@@ -15,7 +15,6 @@ def get_all_customers():
     customer_query = Customer.query
 
     sort_param = request.args.get("sort")
-
     if sort_param:
         if sort_param == "name":
             customer_query = customer_query.order_by(Customer.name)
@@ -44,28 +43,15 @@ def get_all_customers():
 
     customers = []
     if pagination:
-        page = customer_query.paginate(per_page=count)
         if page_num is None:
             page_num = 1
-        while(page_num > 1):
-            page = page.next()
-            page_num -= 1
 
+        page = customer_query.paginate(per_page=count,page=page_num)
         customers = page.items
     else:
         customers = customer_query.all()
     
-    customers_response = []
-
-    for customer in customers:
-        customers_response.append({
-            "id": customer.id,
-            "name": customer.name,
-            "postal_code": customer.postal_code,
-            "phone": customer.phone,
-            "registered_at": customer.registered_at,
-            "videos_checked_out_count": customer.videos_checked_out_count
-        })
+    customers_response = [customer.to_dict() for customer in customers]
 
     return make_response(jsonify(customers_response), 200)
 
@@ -73,14 +59,7 @@ def get_all_customers():
 @customers_bp.route("/<customer_id>", methods=["GET"])
 def get_one_customer(customer_id):
     customer = validate_model(Customer, customer_id)
-    customer_data = {
-            "id": customer.id,
-            "name": customer.name,
-            "postal_code": customer.postal_code,
-            "phone": customer.phone,
-            "registered_at": customer.registered_at,
-            "videos_checked_out_count": customer.videos_checked_out_count
-    }
+    customer_data = customer.to_dict()
 
     return make_response(jsonify(customer_data), 200)
 
@@ -132,7 +111,7 @@ def update_one_customer(customer_id):
 
 @customers_bp.route("/<customer_id>/rentals", methods=["GET"])
 def get_customer_checked_out_videos(customer_id):
-    customer = validate_model(Customer, customer_id)
+    validate_model(Customer, customer_id)
 
     possible_query_params = {"sort" : "", 
             "count": 0, 
