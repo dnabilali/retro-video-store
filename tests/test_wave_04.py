@@ -59,4 +59,11 @@ def test_get_all_videos_query_param_sort_by_release_date(client, one_video, seco
     assert response_body[1]["title"] == VIDEO_1_TITLE
     assert response_body[2]["title"] == VIDEO_3_TITLE
 
+def test_get_all_overdue_rentals_new_videos(client, one_checked_out_video, second_checked_out_video):
+    response = client.get("rentals/overdue")
+    response_body = response.get_json()
+
+    assert response.status_code == 200
+    assert len(response_body) == 0
+
 

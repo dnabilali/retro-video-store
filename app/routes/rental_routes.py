@@ -6,6 +6,7 @@ from app.models.rental import Rental
 from app import db
 from datetime import datetime, timedelta
 
+MAX_DAYS_RENTALS = 7
 
 rentals_bp = Blueprint("rentals_bp", __name__, url_prefix="/rentals")
 
@@ -28,7 +29,7 @@ def checkout_video_to_customer():
     new_rental = Rental(
             customer_id=valid_customer.id, 
             video_id=valid_video.id,
-            due_date=datetime.now() + timedelta(days=7))
+            due_date=datetime.now() + timedelta(days=MAX_DAYS_RENTALS))
     valid_video.available_inventory -= 1
     valid_customer.videos_checked_out_count += 1
     db.session.add(new_rental)
@@ -44,7 +45,7 @@ def checkout_video_to_customer():
 
     return make_response(jsonify(response_body), 200)
 
-@rentals_bp.route("check-in", methods=["POST"])
+@rentals_bp.route("/check-in", methods=["POST"])
 def check_in_video():
     request_body = request.get_json(silent=True)
     required_data = ["customer_id", "video_id"]
@@ -73,21 +74,21 @@ def check_in_video():
 
     return make_response(jsonify(response_data),200)
 
-@rentals_bp.route("", methods=["GET"])
+@rentals_bp.route("/overdue", methods=["GET"])
 def get_overdue_rentals():
 
     overdue_videos = db.session.query(Rental, Video)\
             .join(Video, Rental.video_id==Video.id)\
-            .filter(Rental.due_date > datetime.now()).all()
+            .filter(Rental.due_date < datetime.now()).all()
 
     response_body = []
     for row in overdue_videos:
         response_body.append({
             "id": row.Video.id,
             "title": row.Video.title,
-            "check_out_date": row.Video.due_date - timedelta(days=7),
-            "due_date": row.Video.due_date,
-            "customer_id": row.Video.customer_id
+            "check_out_date": row.Rental.due_date - timedelta(days=MAX_DAYS_RENTALS),
+            "due_date": row.Rental.due_date,
+            "customer_id": row.Rental.customer_id
         })
 
     return jsonify(response_body)
