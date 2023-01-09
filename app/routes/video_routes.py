@@ -13,9 +13,44 @@ required_data = ["title","total_inventory","release_date"]
 def get_all_videos():
     videos_query = Video.query
 
-    videos = videos_query.all()
-    videos_response = [video.to_dict() for video in videos]
+    sort_param = request.args.get("sort")
+    if sort_param:
+        if sort_param == "title":
+            videos_query = videos_query.order_by(Video.title)
+        elif sort_param == "total_inventory":
+            videos_query = videos_query.order_by(Video.total_inventory)
+        elif sort_param == "release_date":
+            videos_query = videos_query.order_by(Video.release_date)
+        else:
+            videos_query = videos_query.order_by(Video.id)
+    else:
+        videos_query = videos_query.order_by(Video.id)   
 
+    count_param = request.args.get("count")
+    page_num_param = request.args.get("page_num")
+
+    pagination = False
+    count = None
+    page_num = None
+    if count_param and count_param.isdigit():
+        count = int(count_param)
+        pagination = True
+
+    if page_num_param and page_num_param.isdigit():
+        page_num = int(page_num_param)
+        pagination = True
+    
+    videos = []
+    if pagination:
+        if page_num is None:
+            page_num = 1
+
+        page = videos_query.paginate(per_page=count,page=page_num)
+        videos = page.items
+    else:
+        videos = videos_query.all()
+
+    videos_response = [video.to_dict() for video in videos]
     return jsonify(videos_response)
 
 @videos_bp.route("/<video_id>",methods=["GET"])
@@ -70,7 +105,7 @@ def delete_video(video_id):
 
 @videos_bp.route("<video_id>/rentals", methods=["GET"])
 def list_customers_renting_video(video_id):
-    valid_video = validate_model(Video,video_id)
+    validate_model(Video,video_id)
 
     possible_query_params = {"sort" : "", 
             "count": 0, 
