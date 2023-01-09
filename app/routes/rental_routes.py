@@ -73,26 +73,3 @@ def check_in_video():
     response_data["available_inventory"] = video.available_inventory
 
     return make_response(jsonify(response_data),200)
-
-@rentals_bp.route("/overdue", methods=["GET"])
-def get_overdue_rentals():
-
-    overdue_videos = db.session.query(Rental, Video)\
-            .join(Video, Rental.video_id==Video.id)\
-            .filter(Rental.due_date < datetime.now()).all()
-
-    response_body = []
-    for row in overdue_videos:
-        response_body.append({
-            "id": row.Video.id,
-            "title": row.Video.title,
-            "check_out_date": row.Rental.due_date - timedelta(days=MAX_DAYS_RENTALS),
-            "due_date": row.Rental.due_date,
-            "customer_id": row.Rental.customer_id
-        })
-
-    return jsonify(response_body)
-
-
-
-
