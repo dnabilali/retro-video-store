@@ -77,6 +77,9 @@ def check_in_video():
 @rentals_bp.route("/overdue", methods=["GET"])
 def get_overdue_rentals():
 
+    #query(attributes you want to get from the query) 
+    #join(put the tables you are joining and how)
+    #filter(you put the extra things you want to filter from)                              
     overdue_videos = db.session.query(Rental, Video, Customer)\
             .join(Video, Rental.video_id==Video.id)\
             .filter(Rental.due_date < datetime.now(), \
