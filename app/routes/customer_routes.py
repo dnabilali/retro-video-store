@@ -9,27 +9,25 @@ import datetime
 
 customers_bp = Blueprint("customers_bp", __name__, url_prefix="/customers")
 
+required_attributes = ["name", "postal_code", "phone"]
 
 @customers_bp.route("", methods=["GET"])
 def get_all_customers():
     customer_query = Customer.query
 
     sort_param = request.args.get("sort")
-    if sort_param:
-        if sort_param == "name":
-            customer_query = customer_query.order_by(Customer.name)
-        elif sort_param == "registered_at":
-            customer_query = customer_query.order_by(Customer.registered_at)
-        elif sort_param == "postal_code":
-            customer_query = customer_query.order_by(Customer.postal_code)
-        else:
-            customer_query = customer_query.order_by(Customer.id)
+    sort_options = {
+        "name": Customer.name,
+        "registered_at": Customer.registered_at,
+        "postal_code": Customer.postal_code,
+    }
+    if sort_param in sort_options:
+        customer_query = customer_query.order_by(sort_options[sort_param])
     else:
-        customer_query = customer_query.order_by(Customer.id)   
+        customer_query = customer_query.order_by(Customer.id)
 
     count_param = request.args.get("count")
     page_num_param = request.args.get("page_num")
-
     pagination = False
     count = None
     page_num = None
@@ -45,7 +43,8 @@ def get_all_customers():
     if pagination:
         if page_num is None:
             page_num = 1
-
+        if count is None:
+            count = 10
         page = customer_query.paginate(per_page=count,page=page_num)
         customers = page.items
     else:
@@ -67,7 +66,6 @@ def get_one_customer(customer_id):
 @customers_bp.route("", methods=["POST"])
 def add_one_customer():
     request_body = request.get_json()
-    required_attributes = ["name", "postal_code", "phone"]
 
     validate_request_body(request_body, required_attributes)
     
@@ -95,7 +93,6 @@ def delete_one_customer(customer_id):
 def update_one_customer(customer_id):
     customer = validate_model(Customer, customer_id)
     request_body = request.get_json()
-    required_attributes = ["name", "phone", "postal_code"]
 
     validate_request_body(request_body, required_attributes)
     
@@ -103,6 +100,7 @@ def update_one_customer(customer_id):
     customer.phone = request_body["phone"]
     customer.postal_code = request_body["postal_code"]
     db.session.commit()
+    
     response_body = request_body
     response_body['registered_at'] = customer.registered_at
 

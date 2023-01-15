@@ -14,21 +14,18 @@ def get_all_videos():
     videos_query = Video.query
 
     sort_param = request.args.get("sort")
-    if sort_param:
-        if sort_param == "title":
-            videos_query = videos_query.order_by(Video.title)
-        elif sort_param == "total_inventory":
-            videos_query = videos_query.order_by(Video.total_inventory)
-        elif sort_param == "release_date":
-            videos_query = videos_query.order_by(Video.release_date)
-        else:
-            videos_query = videos_query.order_by(Video.id)
+    sort_options = {
+        "title": Video.title,
+        "total_inventory": Video.total_inventory,
+        "release_date": Video.release_date
+    }
+    if sort_param in sort_options:
+        videos_query = videos_query.order_by(sort_options[sort_param])
     else:
-        videos_query = videos_query.order_by(Video.id)   
+        videos_query = videos_query.order_by(Video.id)
 
     count_param = request.args.get("count")
     page_num_param = request.args.get("page_num")
-
     pagination = False
     count = None
     page_num = None
@@ -44,6 +41,8 @@ def get_all_videos():
     if pagination:
         if page_num is None:
             page_num = 1
+        if count is None:
+            count = 10
 
         page = videos_query.paginate(per_page=count,page=page_num)
         videos = page.items
